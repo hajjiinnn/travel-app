@@ -71,7 +71,7 @@ export function decodePayload(encoded: string): SharePayload | null {
 }
 
 export function buildShareUrl(payload: SharePayload, origin = window.location.origin): string {
-  return `${origin}/#s=${encodePayload(payload)}`
+  return `${origin}${import.meta.env.BASE_URL}#s=${encodePayload(payload)}`
 }
 
 export function readShareFromLocation(hash = window.location.hash): SharePayload | null {
