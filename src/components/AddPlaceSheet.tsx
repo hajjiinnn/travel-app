@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { LocateFixed, MapPin, Search } from 'lucide-react'
 import { CategoryIcon } from './CategoryIcon'
+import { categoryLabel } from '../db/schema'
 import { Sheet } from './Sheet'
 import { distanceKm, formatDistance, type LatLng } from '../lib/geo'
 import { nearbyPlaces, searchPlaces, searchProviderName, type SearchResult } from '../lib/search'
@@ -119,7 +120,11 @@ export function AddPlaceSheet({ userLocation, locationError, onRefreshLocation, 
               </span>
             )}
           </div>
-          <div className="result-sub">{r.address ?? r.city ?? ''}</div>
+          <div className="result-sub">
+            {[r.kind === 'area' ? 'City or area' : categoryLabel(r.category), r.address ?? r.city]
+              .filter(Boolean)
+              .join(' · ')}
+          </div>
         </div>
         {userLocation && <div className="result-dist">{formatDistance(distanceKm(userLocation, r))}</div>}
       </button>
