@@ -29,15 +29,17 @@ export default defineConfig({
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // The style preview is a separate page; keep it out of the app's install payload.
+        globIgnores: ['preview/**'],
         navigateFallback: `${base}index.html`,
         // The standalone preview pages are real documents, not app routes.
         navigateFallbackDenylist: [/\/preview\//],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
+            urlPattern: /^https:\/\/([abcd]\.basemaps\.cartocdn\.com|[abc]\.tile\.openstreetmap\.org)\/.*/i,
             handler: 'CacheFirst',
             options: {
-              cacheName: 'osm-tiles',
+              cacheName: 'map-tiles',
               expiration: { maxEntries: 800, maxAgeSeconds: 60 * 60 * 24 * 14 },
             },
           },
