@@ -36,7 +36,7 @@ export default defineConfig({
         navigateFallbackDenylist: [/\/preview\//],
         runtimeCaching: [
           {
-            urlPattern: /^https:\/\/([abcd]\.basemaps\.cartocdn\.com|[abc]\.tile\.openstreetmap\.org)\/.*/i,
+            urlPattern: /^https:\/\/([abc]\.tile\.openstreetmap\.org|server\.arcgisonline\.com)\/.*/i,
             handler: 'CacheFirst',
             options: {
               cacheName: 'map-tiles',

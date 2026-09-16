@@ -4,6 +4,8 @@ import L from 'leaflet'
 import { LocateFixed } from 'lucide-react'
 import { costLabel, type Place } from '../db/schema'
 import type { LatLng } from '../lib/geo'
+import { DEFAULT_MAP_STYLE, findMapStyle, MAP_STYLE_SETTING, type MapStyle } from '../lib/mapStyles'
+import { useSetting } from '../hooks'
 
 interface Props {
   places: Place[]
@@ -27,35 +29,27 @@ const meIcon = L.divIcon({ className: '', html: '<div class="pin-me"></div>', ic
 
 
 /**
- * The muted basemap keeps labels and road colour quiet so saved places are the
- * loudest thing on the map. If that style is ever unreachable we fall back to
- * the standard OpenStreetMap tiles rather than showing the user a blank map.
+ * The chosen basemap, with the default applied while the setting loads.
+ *
+ * Tiles that fail outright fall back to the default style. Note that this only
+ * catches loud failures: a provider that quietly starts requiring an API key
+ * serves a normal image with a notice printed on it, which no error handler can
+ * see. That is why every style here uses a keyless tile server.
  */
-const MUTED_TILES = {
-  url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-  subdomains: 'abcd',
-  attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  maxZoom: 20,
-}
-
-const FALLBACK_TILES = {
-  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-  subdomains: 'abc',
-  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-  maxZoom: 19,
-}
-
-/** Enough consecutive failures to mean the style is down, not one flaky tile. */
 const TILE_ERROR_LIMIT = 6
 
-function BaseTiles() {
-  const [source, setSource] = useState(MUTED_TILES)
+function BaseTiles({ style }: { style: MapStyle }) {
+  const [source, setSource] = useState(style)
   const errors = useRef(0)
+
+  useEffect(() => {
+    setSource(style)
+    errors.current = 0
+  }, [style])
 
   return (
     <TileLayer
-      key={source.url}
+      key={source.id}
       url={source.url}
       subdomains={source.subdomains}
       attribution={source.attribution}
@@ -67,8 +61,8 @@ function BaseTiles() {
         },
         tileerror: () => {
           errors.current += 1
-          if (source !== FALLBACK_TILES && errors.current >= TILE_ERROR_LIMIT) {
-            setSource(FALLBACK_TILES)
+          if (source.id !== DEFAULT_MAP_STYLE.id && errors.current >= TILE_ERROR_LIMIT) {
+            setSource(DEFAULT_MAP_STYLE)
           }
         },
       }}
@@ -101,6 +95,7 @@ function FlyTo({ target }: { target: LatLng | null }) {
 }
 
 export function MapView({ places, userLocation, onLocate, onOpen }: Props) {
+  const style = findMapStyle(useSetting(MAP_STYLE_SETTING))
   const center = useMemo<[number, number]>(() => {
     if (places.length) return [places[0].lat, places[0].lng]
     if (userLocation) return [userLocation.lat, userLocation.lng]
@@ -108,9 +103,9 @@ export function MapView({ places, userLocation, onLocate, onOpen }: Props) {
   }, [places, userLocation])
 
   return (
-    <div className="map-wrap">
+    <div className="map-wrap" style={{ ["--map-filter" as string]: style.filter ?? "none" }}>
       <MapContainer center={center} zoom={13} zoomControl={false} attributionControl>
-        <BaseTiles />
+        <BaseTiles style={style} />
         <FitToPlaces places={places} userLocation={userLocation} />
         <FlyTo target={null} />
         {userLocation && <Marker position={[userLocation.lat, userLocation.lng]} icon={meIcon} interactive={false} />}

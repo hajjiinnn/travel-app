@@ -4,9 +4,11 @@ import { clearAllData, setSetting } from '../db/repo'
 import { useSetting } from '../hooks'
 import { downloadJson, exportBackup, importBackup, isBackup } from '../lib/backup'
 import { searchProviderName } from '../lib/search'
+import { MAP_STYLES, MAP_STYLE_SETTING, findMapStyle } from '../lib/mapStyles'
 
 export function SettingsView({ placeCount, onToast }: { placeCount: number; onToast: (m: string) => void }) {
   const name = useSetting('displayName') ?? ''
+  const mapStyle = findMapStyle(useSetting(MAP_STYLE_SETTING))
   const [busy, setBusy] = useState(false)
   const fileInput = useRef<HTMLInputElement>(null)
 
@@ -56,6 +58,24 @@ export function SettingsView({ placeCount, onToast }: { placeCount: number; onTo
         </div>
         <div className="settings-row">
           <input className="input" placeholder="Your name" defaultValue={name} onBlur={(e) => void setSetting('displayName', e.target.value.trim())} />
+        </div>
+      </div>
+
+      <div className="section-title">Map</div>
+      <div className="settings-group">
+        <div className="settings-row" style={{ display: 'block' }}>
+          <div className="chips" style={{ marginBottom: 8 }}>
+            {MAP_STYLES.map((s) => (
+              <button
+                key={s.id}
+                className={`chip${mapStyle.id === s.id ? ' active' : ''}`}
+                onClick={() => void setSetting(MAP_STYLE_SETTING, s.id)}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="sub">{mapStyle.description}</div>
         </div>
       </div>
 
