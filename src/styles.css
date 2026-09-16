@@ -105,6 +105,7 @@ a { color: var(--accent-ink); }
 /* Map */
 .map-wrap { position: absolute; inset: 0; }
 .leaflet-container { width: 100%; height: 100%; background: var(--bg-muted); }
+.leaflet-tile-pane { filter: var(--map-filter, none); }
 .map-locate { position: absolute; right: 16px; bottom: 96px; z-index: 1000; }
 .map-locate button, .map-count {
   background: var(--bg-elev); color: var(--fg); border-radius: 999px; box-shadow: var(--shadow);

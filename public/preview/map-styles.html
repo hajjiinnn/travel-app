@@ -83,10 +83,9 @@
 (function () {
   var STYLES = [
     { id: 'osm', label: 'Detailed (current)', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', sub: 'abc', attr: '&copy; OpenStreetMap' },
-    { id: 'positron', label: 'Muted grey', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
-    { id: 'positron-nolabels', label: 'Muted, no labels', url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
-    { id: 'voyager', label: 'Soft colour', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
-    { id: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' }
+    { id: 'muted', label: 'Muted', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', sub: 'abc', attr: '&copy; OpenStreetMap', filter: 'saturate(0.32) brightness(1.07) contrast(0.92)' },
+    { id: 'soft', label: 'Softer still', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', sub: 'abc', attr: '&copy; OpenStreetMap', filter: 'saturate(0.12) brightness(1.12) contrast(0.88)' },
+    { id: 'greycanvas', label: 'Grey canvas', url: 'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Light_Gray_Base/MapServer/tile/{z}/{y}/{x}', sub: '', attr: 'Tiles &copy; Esri' }
   ];
   var PINS = [
     { id: 'current', label: 'Rating pins (current)' },
@@ -100,7 +99,7 @@
   ];
   var ICONS = { restaurant: '🍴', cafe: '☕', bar: '🍸', park: '🌳', museum: '🏛', shop: '🛍', bakery: '🥐' };
 
-  var state = { style: 'positron', pin: 'zoom', extras: { cluster: true, counter: false } };
+  var state = { style: 'muted', pin: 'zoom', extras: { cluster: true, counter: false } };
   var center = [30.2672, -97.7431];
 
   var map = L.map('map', { zoomControl: false, attributionControl: true }).setView(center, 14);
@@ -119,9 +118,11 @@
   }
 
   function setTiles() {
-    var s = STYLES.filter(function (x) { return x.id === state.style; })[0];
+    var s = STYLES.filter(function (x) { return x.id === state.style; })[0] || STYLES[0];
     if (tiles) map.removeLayer(tiles);
     tiles = L.tileLayer(s.url, { subdomains: s.sub, attribution: s.attr, maxZoom: 19, detectRetina: true }).addTo(map);
+    var pane = document.querySelector('.leaflet-tile-pane');
+    if (pane) pane.style.filter = s.filter || 'none';
   }
 
   function markerFor(p, mode) {

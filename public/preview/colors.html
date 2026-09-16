@@ -162,9 +162,12 @@
 
   var center = [30.2672, -97.7431];
   var map = L.map('map', { zoomControl:false, attributionControl:true, dragging:true }).setView(center, 15);
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-    subdomains:'abcd', attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:20, detectRetina:true
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    subdomains:'abc', attribution:'&copy; OpenStreetMap', maxZoom:19, detectRetina:true
   }).addTo(map);
+  // Muted the same way the app mutes it, with a CSS filter over keyless tiles.
+  var pane = document.querySelector('.leaflet-tile-pane');
+  if (pane) pane.style.filter = 'saturate(0.32) brightness(1.07) contrast(0.92)';
 
   var pins = [
     [0.0016, 0.0014, '5', 'been'], [0.0022, -0.0020, '4', 'been'], [-0.0012, 0.0026, '4', 'been'],
