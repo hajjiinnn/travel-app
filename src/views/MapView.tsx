@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { MapContainer, Marker, Popup, TileLayer, useMap } from 'react-leaflet'
 import L from 'leaflet'
 import { LocateFixed } from 'lucide-react'
@@ -24,6 +24,57 @@ function pinIcon(place: Place) {
 }
 
 const meIcon = L.divIcon({ className: '', html: '<div class="pin-me"></div>', iconSize: [16, 16], iconAnchor: [8, 8] })
+
+
+/**
+ * The muted basemap keeps labels and road colour quiet so saved places are the
+ * loudest thing on the map. If that style is ever unreachable we fall back to
+ * the standard OpenStreetMap tiles rather than showing the user a blank map.
+ */
+const MUTED_TILES = {
+  url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+  subdomains: 'abcd',
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  maxZoom: 20,
+}
+
+const FALLBACK_TILES = {
+  url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+  subdomains: 'abc',
+  attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+  maxZoom: 19,
+}
+
+/** Enough consecutive failures to mean the style is down, not one flaky tile. */
+const TILE_ERROR_LIMIT = 6
+
+function BaseTiles() {
+  const [source, setSource] = useState(MUTED_TILES)
+  const errors = useRef(0)
+
+  return (
+    <TileLayer
+      key={source.url}
+      url={source.url}
+      subdomains={source.subdomains}
+      attribution={source.attribution}
+      maxZoom={source.maxZoom}
+      detectRetina
+      eventHandlers={{
+        tileload: () => {
+          errors.current = 0
+        },
+        tileerror: () => {
+          errors.current += 1
+          if (source !== FALLBACK_TILES && errors.current >= TILE_ERROR_LIMIT) {
+            setSource(FALLBACK_TILES)
+          }
+        },
+      }}
+    />
+  )
+}
 
 function FitToPlaces({ places, userLocation }: { places: Place[]; userLocation: LatLng | null }) {
   const map = useMap()
@@ -59,7 +110,7 @@ export function MapView({ places, userLocation, onLocate, onOpen }: Props) {
   return (
     <div className="map-wrap">
       <MapContainer center={center} zoom={13} zoomControl={false} attributionControl>
-        <TileLayer attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>' url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <BaseTiles />
         <FitToPlaces places={places} userLocation={userLocation} />
         <FlyTo target={null} />
         {userLocation && <Marker position={[userLocation.lat, userLocation.lng]} icon={meIcon} interactive={false} />}
