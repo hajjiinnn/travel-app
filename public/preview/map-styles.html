@@ -1,0 +1,237 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Map style preview</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root {
+    --bg: #fafaf9; --panel: #fff; --fg: #1c1917; --muted: #78716c; --border: #e7e5e4;
+    --accent: #d97706; --accent-fg: #fff; --been: #d97706; --want: #2563eb;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg:#1c1917; --panel:#292524; --fg:#fafaf9; --muted:#a8a29e; --border:#44403c; --accent:#f59e0b; --accent-fg:#1c1917; --been:#f59e0b; --want:#60a5fa; }
+  }
+  * { box-sizing: border-box; }
+  html, body { margin:0; height:100%; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; }
+  .wrap { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(24px + var(--safe-b)); }
+  h1 { font-size: 20px; margin: 0 0 4px; }
+  .lede { color: var(--muted); font-size: 14px; margin: 0 0 16px; }
+  .map { height: 46vh; min-height: 300px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); background: var(--border); }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 20px 0 8px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { padding: 9px 14px; border-radius: 999px; border: 1px solid var(--border); background: var(--panel); color: var(--fg); font-size: 14px; font-weight: 600; cursor: pointer; }
+  .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); border-color: var(--accent); }
+  .note { font-size: 13px; color: var(--muted); margin-top: 8px; }
+  .summary { margin-top: 24px; background: var(--panel); border: 1px solid var(--border); border-radius: 14px; padding: 14px; }
+  .summary h2 { margin-top: 0; }
+  .pick { font-size: 15px; margin: 0 0 4px; }
+  .pick b { font-weight: 700; }
+  code { background: var(--bg); border: 1px solid var(--border); border-radius: 6px; padding: 2px 6px; font-size: 13px; }
+  .row { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; }
+  /* Markers */
+  .pin-wrap { width:0; height:0; }
+  .pin-drop { position:absolute; left:-15px; top:-34px; width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid #fff; box-shadow:0 2px 5px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+  .pin-drop span { transform:rotate(45deg); color:#fff; font-weight:800; font-size:12px; line-height:1; }
+  .pin-dot { position:absolute; left:-6px; top:-6px; width:12px; height:12px; border-radius:50%; border:2px solid #fff; box-shadow:0 1px 3px rgba(0,0,0,.4); }
+  .pin-icon { position:absolute; left:-14px; top:-14px; width:28px; height:28px; border-radius:50%; background:var(--panel); border:2px solid currentColor; display:flex; align-items:center; justify-content:center; font-size:14px; box-shadow:0 1px 4px rgba(0,0,0,.3); }
+  .cluster { position:absolute; left:-18px; top:-18px; width:36px; height:36px; border-radius:50%; background:var(--accent); color:var(--accent-fg); border:2px solid #fff; display:flex; align-items:center; justify-content:center; font-weight:800; font-size:14px; box-shadow:0 2px 6px rgba(0,0,0,.35); }
+  .been { background: var(--been); } .want { background: var(--want); }
+  .c-been { color: var(--been); } .c-want { color: var(--want); }
+  .counter { position:absolute; left:10px; top:10px; z-index:500; background:var(--panel); color:var(--fg); border-radius:999px; padding:5px 11px; font-size:13px; font-weight:600; box-shadow:0 2px 8px rgba(0,0,0,.2); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Map style preview</h1>
+  <p class="lede">Your real app is untouched. This page just lets you see the options on a live map. Tap around, then tell me which combination you want.</p>
+
+  <div class="row">
+    <button class="chip" id="locate" aria-pressed="false">Center on my location</button>
+    <span class="note" id="loc-note" style="margin:0">Showing a sample city until you tap that.</span>
+  </div>
+
+  <div style="position:relative">
+    <div class="map" id="map"></div>
+    <div class="counter" id="counter" hidden>8 places</div>
+  </div>
+  <p class="note">The pins are made-up examples so you can judge the look, not real places you saved.</p>
+
+  <h2>Map background</h2>
+  <div class="chips" id="styles"></div>
+
+  <h2>Pins</h2>
+  <div class="chips" id="pins"></div>
+
+  <h2>Extras</h2>
+  <div class="chips" id="extras"></div>
+
+  <div class="summary">
+    <h2>Your picks</h2>
+    <p class="pick">Background: <b id="s-style">—</b></p>
+    <p class="pick">Pins: <b id="s-pin">—</b></p>
+    <p class="pick">Extras: <b id="s-extra">—</b></p>
+    <p class="note">Send me this line and I'll build it: <code id="s-code">—</code></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  var STYLES = [
+    { id: 'osm', label: 'Detailed (current)', url: 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', sub: 'abc', attr: '&copy; OpenStreetMap' },
+    { id: 'positron', label: 'Muted grey', url: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
+    { id: 'positron-nolabels', label: 'Muted, no labels', url: 'https://{s}.basemaps.cartocdn.com/light_nolabels/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
+    { id: 'voyager', label: 'Soft colour', url: 'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' },
+    { id: 'dark', label: 'Dark', url: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', sub: 'abcd', attr: '&copy; OpenStreetMap, &copy; CARTO' }
+  ];
+  var PINS = [
+    { id: 'current', label: 'Rating pins (current)' },
+    { id: 'dots', label: 'Small dots' },
+    { id: 'zoom', label: 'Dots, detail on zoom' },
+    { id: 'icons', label: 'Category icons' }
+  ];
+  var EXTRAS = [
+    { id: 'cluster', label: 'Group nearby pins' },
+    { id: 'counter', label: 'Show place counter' }
+  ];
+  var ICONS = { restaurant: '🍴', cafe: '☕', bar: '🍸', park: '🌳', museum: '🏛', shop: '🛍', bakery: '🥐' };
+
+  var state = { style: 'positron', pin: 'zoom', extras: { cluster: true, counter: false } };
+  var center = [30.2672, -97.7431];
+
+  var map = L.map('map', { zoomControl: false, attributionControl: true }).setView(center, 14);
+  var tiles = null, layer = L.layerGroup().addTo(map), places = [];
+
+  function makePlaces(c) {
+    var spec = [
+      [0.0035, 0.0030, 5, 'restaurant', 'been'], [0.0041, 0.0037, 4, 'restaurant', 'been'],
+      [0.0038, 0.0044, 3, 'cafe', 'been'], [-0.0032, 0.0051, 0, 'bar', 'want'],
+      [-0.0060, -0.0042, 5, 'park', 'been'], [0.0075, -0.0065, 4, 'museum', 'been'],
+      [-0.0085, 0.0080, 0, 'bakery', 'want'], [0.0022, -0.0088, 4, 'shop', 'been']
+    ];
+    return spec.map(function (s, i) {
+      return { id: i, lat: c[0] + s[0], lng: c[1] + s[1], rating: s[2], category: s[3], status: s[4] };
+    });
+  }
+
+  function setTiles() {
+    var s = STYLES.filter(function (x) { return x.id === state.style; })[0];
+    if (tiles) map.removeLayer(tiles);
+    tiles = L.tileLayer(s.url, { subdomains: s.sub, attribution: s.attr, maxZoom: 19, detectRetina: true }).addTo(map);
+  }
+
+  function markerFor(p, mode) {
+    var cls = p.status === 'been' ? 'been' : 'want';
+    if (mode === 'dots' || (mode === 'zoom' && map.getZoom() < 15)) {
+      return L.divIcon({ className: 'pin-wrap', html: '<div class="pin-dot ' + cls + '"></div>', iconSize: [0, 0] });
+    }
+    if (mode === 'icons') {
+      return L.divIcon({ className: 'pin-wrap', html: '<div class="pin-icon ' + (p.status === 'been' ? 'c-been' : 'c-want') + '">' + (ICONS[p.category] || '📍') + '</div>', iconSize: [0, 0] });
+    }
+    var label = p.status === 'been' ? (p.rating || '•') : '♡';
+    return L.divIcon({ className: 'pin-wrap', html: '<div class="pin-drop ' + cls + '"><span>' + label + '</span></div>', iconSize: [0, 0] });
+  }
+
+  // Simple pixel-distance clustering, enough to judge the look.
+  function clusters(pts) {
+    var out = [], used = {};
+    pts.forEach(function (p, i) {
+      if (used[i]) return;
+      var group = [p], a = map.latLngToContainerPoint([p.lat, p.lng]);
+      pts.forEach(function (q, j) {
+        if (j <= i || used[j]) return;
+        var b = map.latLngToContainerPoint([q.lat, q.lng]);
+        if (a.distanceTo(b) < 56) { group.push(q); used[j] = 1; }
+      });
+      used[i] = 1;
+      out.push(group);
+    });
+    return out;
+  }
+
+  function draw() {
+    layer.clearLayers();
+    document.getElementById('counter').hidden = !state.extras.counter;
+    var groups = state.extras.cluster ? clusters(places) : places.map(function (p) { return [p]; });
+    groups.forEach(function (g) {
+      if (g.length > 1) {
+        var lat = 0, lng = 0;
+        g.forEach(function (p) { lat += p.lat; lng += p.lng; });
+        L.marker([lat / g.length, lng / g.length], {
+          icon: L.divIcon({ className: 'pin-wrap', html: '<div class="cluster">' + g.length + '</div>', iconSize: [0, 0] })
+        }).addTo(layer).on('click', function () { map.setZoom(map.getZoom() + 2); });
+      } else {
+        L.marker([g[0].lat, g[0].lng], { icon: markerFor(g[0], state.pin) }).addTo(layer);
+      }
+    });
+  }
+
+  function chipRow(el, items, isOn, onTap) {
+    el.innerHTML = '';
+    items.forEach(function (it) {
+      var b = document.createElement('button');
+      b.className = 'chip';
+      b.type = 'button';
+      b.textContent = it.label;
+      b.setAttribute('aria-pressed', String(isOn(it)));
+      b.addEventListener('click', function () { onTap(it); renderChips(); });
+      el.appendChild(b);
+    });
+  }
+
+  function renderChips() {
+    chipRow(document.getElementById('styles'), STYLES,
+      function (i) { return state.style === i.id; },
+      function (i) { state.style = i.id; setTiles(); });
+    chipRow(document.getElementById('pins'), PINS,
+      function (i) { return state.pin === i.id; },
+      function (i) { state.pin = i.id; draw(); });
+    chipRow(document.getElementById('extras'), EXTRAS,
+      function (i) { return !!state.extras[i.id]; },
+      function (i) { state.extras[i.id] = !state.extras[i.id]; draw(); });
+    summarize();
+  }
+
+  function labelOf(list, id) {
+    var m = list.filter(function (x) { return x.id === id; })[0];
+    return m ? m.label : '—';
+  }
+
+  function summarize() {
+    var on = EXTRAS.filter(function (e) { return state.extras[e.id]; }).map(function (e) { return e.label; });
+    document.getElementById('s-style').textContent = labelOf(STYLES, state.style);
+    document.getElementById('s-pin').textContent = labelOf(PINS, state.pin);
+    document.getElementById('s-extra').textContent = on.length ? on.join(', ') : 'none';
+    document.getElementById('s-code').textContent =
+      'map=' + state.style + ' pins=' + state.pin + ' extras=' + (on.length ? EXTRAS.filter(function (e) { return state.extras[e.id]; }).map(function (e) { return e.id; }).join('+') : 'none');
+  }
+
+  map.on('zoomend', function () { if (state.pin === 'zoom' || state.extras.cluster) draw(); });
+  map.on('moveend', function () { if (state.extras.cluster) draw(); });
+
+  document.getElementById('locate').addEventListener('click', function () {
+    var note = document.getElementById('loc-note');
+    if (!navigator.geolocation) { note.textContent = 'This browser has no location support.'; return; }
+    note.textContent = 'Finding you…';
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      center = [pos.coords.latitude, pos.coords.longitude];
+      places = makePlaces(center);
+      map.setView(center, 15);
+      draw();
+      note.textContent = 'Centred on you. Example pins scattered nearby.';
+    }, function () { note.textContent = 'Could not get your location. Still showing the sample city.'; },
+      { enableHighAccuracy: true, timeout: 10000 });
+  });
+
+  places = makePlaces(center);
+  setTiles();
+  draw();
+  renderChips();
+})();
+</script>
+</body>
+</html>
