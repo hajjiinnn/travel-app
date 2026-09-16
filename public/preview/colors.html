@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Colour options</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+<style>
+  :root {
+    --bg:#FAFAF9; --surface:#FFFFFF; --fg:#1C1917; --muted:#78716C; --border:#E7E5E4;
+    --been:#D97706; --want:#2563EB; --accent:#D97706; --accent-fg:#FFFFFF;
+    --safe-b: env(safe-area-inset-bottom, 0px);
+  }
+  * { box-sizing:border-box; }
+  html, body { margin:0; }
+  body { background:var(--bg); color:var(--fg); font:16px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif; -webkit-font-smoothing:antialiased; transition:background .2s,color .2s; }
+  .wrap { max-width:720px; margin:0 auto; padding:18px 16px calc(28px + var(--safe-b)); }
+  h1 { font-size:21px; margin:0 0 4px; letter-spacing:-.01em; }
+  .lede { color:var(--muted); font-size:14px; margin:0 0 18px; }
+  h2 { font-size:12px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin:22px 0 8px; font-weight:700; }
+  .chips { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { padding:9px 14px; border-radius:999px; border:1px solid var(--border); background:var(--surface); color:var(--fg); font-size:14px; font-weight:600; cursor:pointer; }
+  .chip[aria-pressed="true"] { background:var(--accent); color:var(--accent-fg); border-color:var(--accent); }
+
+  .name { font-size:24px; font-weight:800; margin:18px 0 2px; letter-spacing:-.02em; }
+  .tag { color:var(--muted); font-size:14px; margin:0 0 14px; }
+
+  .swatches { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .sw { border-radius:12px; overflow:hidden; border:1px solid var(--border); background:var(--surface); }
+  .sw .fill { height:64px; }
+  .sw .meta { padding:8px 10px; }
+  .sw .role { font-size:12px; font-weight:700; }
+  .sw .hex { font-size:11px; color:var(--muted); font-variant-numeric:tabular-nums; text-transform:uppercase; }
+
+  .phone { border:1px solid var(--border); border-radius:18px; overflow:hidden; background:var(--surface); }
+  .topbar { display:flex; align-items:center; gap:10px; padding:12px 14px; border-bottom:1px solid var(--border); background:var(--surface); }
+  .topbar .title { font-weight:800; flex:1; font-size:17px; }
+  .seg { display:inline-flex; background:var(--bg); border-radius:999px; padding:3px; gap:2px; }
+  .seg span { padding:5px 11px; border-radius:999px; font-size:13px; font-weight:700; color:var(--muted); }
+  .seg span.on { background:var(--surface); color:var(--fg); box-shadow:0 1px 3px rgba(0,0,0,.14); }
+  .maparea { position:relative; }
+  .map { height:280px; }
+  .counter { position:absolute; left:10px; top:10px; z-index:1000; background:var(--surface); color:var(--fg); border-radius:999px; padding:5px 11px; font-size:13px; font-weight:700; box-shadow:0 2px 8px rgba(0,0,0,.18); }
+  .fab { position:absolute; right:14px; bottom:14px; z-index:1000; width:54px; height:54px; border-radius:999px; background:var(--accent); color:var(--accent-fg); display:flex; align-items:center; justify-content:center; font-size:30px; font-weight:300; box-shadow:0 6px 18px rgba(0,0,0,.22); }
+  .bottomnav { display:flex; border-top:1px solid var(--border); background:var(--surface); }
+  .bottomnav div { flex:1; text-align:center; padding:9px 0; font-size:11px; font-weight:700; color:var(--muted); }
+  .bottomnav div.on { color:var(--accent); }
+
+  .card { display:flex; gap:12px; padding:12px; background:var(--surface); border:1px solid var(--border); border-radius:14px; margin-bottom:10px; }
+  .thumb { width:60px; height:60px; border-radius:10px; background:var(--bg); flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:22px; }
+  .card .nm { font-weight:700; display:flex; align-items:center; gap:7px; }
+  .dot { width:9px; height:9px; border-radius:50%; flex-shrink:0; }
+  .dot.been { background:var(--been); } .dot.want { background:var(--want); }
+  .sub { font-size:13px; color:var(--muted); }
+  .meta-row { display:flex; align-items:center; gap:8px; margin-top:5px; flex-wrap:wrap; font-size:13px; }
+  .stars { color:var(--been); letter-spacing:-1px; font-weight:700; }
+  .cost { color:var(--muted); font-weight:700; }
+  .tag-chip { background:var(--bg); border:1px solid var(--border); border-radius:999px; padding:2px 9px; font-size:12px; font-weight:600; }
+  .pill { border-radius:999px; padding:3px 10px; font-size:12px; font-weight:700; color:#fff; }
+  .pill.want { background:var(--want); }
+  .tip { font-size:13px; margin-top:5px; }
+
+  .btnrow { display:flex; gap:10px; flex-wrap:wrap; align-items:center; }
+  .btn { padding:11px 18px; border-radius:12px; font-weight:700; background:var(--bg); color:var(--fg); border:1px solid var(--border); }
+  .btn.primary { background:var(--accent); color:var(--accent-fg); border-color:var(--accent); }
+  .toggle { display:flex; background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:4px; gap:4px; }
+  .toggle span { padding:9px 16px; border-radius:9px; font-weight:700; font-size:14px; color:var(--muted); }
+  .toggle span.been-on { background:var(--been); color:#fff; }
+  .toggle span.want-on { background:var(--want); color:#fff; }
+
+  .pin-wrap { width:0; height:0; }
+  .pin-drop { position:absolute; left:-15px; top:-34px; width:30px; height:30px; border-radius:50% 50% 50% 0; transform:rotate(-45deg); border:2px solid #fff; box-shadow:0 2px 6px rgba(0,0,0,.35); display:flex; align-items:center; justify-content:center; }
+  .pin-drop span { transform:rotate(45deg); color:#fff; font-weight:800; font-size:12px; line-height:1; }
+  .pin-drop.been { background:var(--been); } .pin-drop.want { background:var(--want); }
+
+  .summary { margin-top:22px; background:var(--surface); border:1px solid var(--border); border-radius:14px; padding:14px; }
+  .summary p { margin:0 0 6px; font-size:15px; }
+  code { background:var(--bg); border:1px solid var(--border); border-radius:6px; padding:2px 7px; font-size:13px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Colour options</h1>
+  <p class="lede">Every option uses a light background. Tap a name to try it on the real interface, then send me the one you want.</p>
+
+  <div class="chips" id="picker"></div>
+
+  <div class="name" id="p-name">—</div>
+  <p class="tag" id="p-tag">—</p>
+
+  <div class="swatches" id="swatches"></div>
+
+  <h2>On the map</h2>
+  <div class="phone">
+    <div class="topbar">
+      <div class="title">Been There</div>
+      <div class="seg"><span class="on">Map</span><span>List</span></div>
+    </div>
+    <div class="maparea">
+      <div class="map" id="map"></div>
+      <div class="counter">8 places</div>
+      <div class="fab">+</div>
+    </div>
+    <div class="bottomnav"><div class="on">Places</div><div>Lists</div><div>Settings</div></div>
+  </div>
+
+  <h2>In the list</h2>
+  <div class="card">
+    <div class="thumb">🍴</div>
+    <div>
+      <div class="nm"><span class="dot been"></span>Franklin Barbecue</div>
+      <div class="sub">900 E 11th St · 1.2 km</div>
+      <div class="meta-row"><span class="stars">★★★★☆</span><span class="cost">$$</span><span class="tag-chip">#bbq</span><span class="tag-chip">#worth-the-wait</span></div>
+      <div class="tip">Order: brisket, get there before 10</div>
+    </div>
+  </div>
+  <div class="card">
+    <div class="thumb">🥐</div>
+    <div>
+      <div class="nm"><span class="dot want"></span>Comadre Panadería</div>
+      <div class="sub">2027 Anchor Ln · 3.4 km</div>
+      <div class="meta-row"><span class="pill want">Want to go</span><span class="tag-chip">#pastry</span></div>
+      <div class="tip sub">Sam says get the guava concha</div>
+    </div>
+  </div>
+
+  <h2>Buttons and controls</h2>
+  <div class="btnrow">
+    <button class="btn primary">Save</button>
+    <button class="btn">Cancel</button>
+    <div class="toggle"><span class="been-on">Been there</span><span>Want to go</span></div>
+  </div>
+  <div class="btnrow" style="margin-top:10px">
+    <div class="toggle"><span>Been there</span><span class="want-on">Want to go</span></div>
+  </div>
+
+  <div class="summary">
+    <p>Currently showing: <b id="s-name">—</b></p>
+    <p class="sub">Send me this and I'll build it: <code id="s-code">—</code></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+<script>
+(function () {
+  var PALETTES = [
+    { id:'chosen', name:'Yours (now live)', tag:'Deep wine and electric blue carry the two place states, since they are the only two dark enough for white text. Bright yellow is the action colour, with dark ink on it. Magenta and periwinkle appear in small doses.',
+      bg:'#FBF9F3', surface:'#FFFFFF', fg:'#1A1420', muted:'#6B6472', border:'#E8E2D8', been:'#802653', want:'#0055FF', accent:'#FFEE33', accentFg:'#1A1420' },
+    { id:'current', name:'What you have now', tag:'Amber and blue. The pairing most map apps reach for.',
+      bg:'#FAFAF9', surface:'#FFFFFF', fg:'#1C1917', muted:'#78716C', border:'#E7E5E4', been:'#D97706', want:'#2563EB', accent:'#D97706' },
+    { id:'riso', name:'Riso Pop', tag:'Fluorescent pink and press green on warm paper. Borrowed from risograph printing, which is where the fluoro inks come from.',
+      bg:'#FDFAF5', surface:'#FFFFFF', fg:'#1F1B18', muted:'#6E655C', border:'#EFE6DC', been:'#D4145A', want:'#00874E', accent:'#D4145A' },
+    { id:'bloodorange', name:'Blood Orange & Olive', tag:'Citrus red against a dusty olive. Reads like a good menu: appetising, a little rustic, not sweet.',
+      bg:'#FCFAF2', surface:'#FFFFFF', fg:'#1C1A14', muted:'#6B6553', border:'#EDE8DA', been:'#D93A1C', want:'#55691F', accent:'#D93A1C' },
+    { id:'orchid', name:'Orchid & Pine', tag:'Deep magenta with forest green on a faintly lilac white. The most saturated of the set and the least expected.',
+      bg:'#FCF8FB', surface:'#FFFFFF', fg:'#1E1720', muted:'#6B5F6E', border:'#EDE2EC', been:'#B01E86', want:'#1C6047', accent:'#B01E86' },
+    { id:'papaya', name:'Papaya & Plum', tag:'Hot papaya against a dark plum. The two states differ in weight as well as hue, so the map reads even in a squint.',
+      bg:'#FFF9F4', surface:'#FFFFFF', fg:'#231913', muted:'#7A6357', border:'#F2E4D9', been:'#C9441A', want:'#6E2A59', accent:'#C9441A' },
+    { id:'lagoon', name:'Lagoon & Chili', tag:'Deep teal and chili red on a cool off-white. Cooler and calmer than the rest, with the heat saved for places you have been.',
+      bg:'#F6FBFA', surface:'#FFFFFF', fg:'#14201E', muted:'#5C6E6A', border:'#DDEBE8', been:'#CC3520', want:'#066E6D', accent:'#066E6D' }
+  ];
+
+  var center = [30.2672, -97.7431];
+  var map = L.map('map', { zoomControl:false, attributionControl:true, dragging:true }).setView(center, 15);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', attribution:'&copy; OpenStreetMap &copy; CARTO', maxZoom:20, detectRetina:true
+  }).addTo(map);
+
+  var pins = [
+    [0.0016, 0.0014, '5', 'been'], [0.0022, -0.0020, '4', 'been'], [-0.0012, 0.0026, '4', 'been'],
+    [-0.0024, -0.0012, '3', 'been'], [0.0031, 0.0030, '5', 'been'],
+    [-0.0032, 0.0022, '♡', 'want'], [0.0008, -0.0034, '♡', 'want'], [-0.0018, -0.0030, '♡', 'want']
+  ];
+  pins.forEach(function (p) {
+    L.marker([center[0] + p[0], center[1] + p[1]], {
+      icon: L.divIcon({ className:'pin-wrap', html:'<div class="pin-drop ' + p[3] + '"><span>' + p[2] + '</span></div>', iconSize:[0,0] })
+    }).addTo(map);
+  });
+
+  var current = PALETTES[0];
+
+  function apply(p) {
+    current = p;
+    var r = document.documentElement.style;
+    r.setProperty('--bg', p.bg); r.setProperty('--surface', p.surface); r.setProperty('--fg', p.fg);
+    r.setProperty('--muted', p.muted); r.setProperty('--border', p.border);
+    r.setProperty('--been', p.been); r.setProperty('--want', p.want); r.setProperty('--accent', p.accent); r.setProperty('--accent-fg', p.accentFg || '#FFFFFF');
+    document.getElementById('p-name').textContent = p.name;
+    document.getElementById('p-tag').textContent = p.tag;
+    document.getElementById('s-name').textContent = p.name;
+    document.getElementById('s-code').textContent = 'colors=' + p.id;
+    var roles = [['Background', p.bg], ['Been there', p.been], ['Want to go', p.want]];
+    document.getElementById('swatches').innerHTML = roles.map(function (x) {
+      return '<div class="sw"><div class="fill" style="background:' + x[1] + '"></div><div class="meta"><div class="role">' + x[0] + '</div><div class="hex">' + x[1] + '</div></div></div>';
+    }).join('');
+    render();
+  }
+
+  function render() {
+    document.getElementById('picker').innerHTML = PALETTES.map(function (p) {
+      return '<button class="chip" type="button" data-id="' + p.id + '" aria-pressed="' + (p.id === current.id) + '">' + p.name + '</button>';
+    }).join('');
+    Array.prototype.forEach.call(document.querySelectorAll('#picker .chip'), function (b) {
+      b.addEventListener('click', function () {
+        apply(PALETTES.filter(function (x) { return x.id === b.dataset.id; })[0]);
+      });
+    });
+  }
+
+  apply(current);
+})();
+</script>
+</body>
+</html>
