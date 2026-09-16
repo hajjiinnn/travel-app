@@ -30,6 +30,8 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         navigateFallback: `${base}index.html`,
+        // The standalone preview pages are real documents, not app routes.
+        navigateFallbackDenylist: [/\/preview\//],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/[abc]\.tile\.openstreetmap\.org\/.*/i,
