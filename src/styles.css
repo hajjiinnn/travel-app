@@ -1,37 +1,39 @@
+/*
+ * Palette (HSB as supplied):
+ *   soft yellow   55/60/100  #FFF266     bright yellow  55/80/100   #FFEE33
+ *   periwinkle   220/40/100  #99BBFF     electric blue 220/100/100  #0055FF
+ *   deep wine    330/70/50   #802653     magenta       300/70/100   #FF4DFF
+ *
+ * Only the wine and the electric blue are dark enough to carry white text, so
+ * they take the two place states. The yellows and magenta are fills that always
+ * pair with dark ink, which is why --accent (a fill) and --accent-ink (text and
+ * borders) are separate tokens.
+ */
 :root {
-  --bg: #fafaf9;
-  --bg-elev: #ffffff;
-  --bg-muted: #f5f5f4;
-  --fg: #1c1917;
-  --fg-muted: #78716c;
-  --border: #e7e5e4;
-  --accent: #d97706;
-  --accent-fg: #ffffff;
-  --been: #d97706;
-  --want: #2563eb;
-  --danger: #dc2626;
-  --star: #f59e0b;
+  --bg: #FBF9F3;
+  --bg-elev: #FFFFFF;
+  --bg-muted: #F4F1E8;
+  --fg: #1A1420;
+  --fg-muted: #6B6472;
+  --border: #E8E2D8;
+
+  --accent: #FFEE33;
+  --accent-fg: #1A1420;
+  --accent-ink: #802653;
+
+  --been: #802653;
+  --want: #0055FF;
+  --highlight: #FF4DFF;
+  --soft: #99BBFF;
+  --pale: #FFF266;
+
+  --danger: #C81E1E;
+  --star: #802653;
   --radius: 14px;
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.14);
+  --shadow: 0 8px 30px rgba(26, 20, 32, 0.16);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
-  color-scheme: light dark;
-}
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #1c1917;
-    --bg-elev: #292524;
-    --bg-muted: #33302d;
-    --fg: #fafaf9;
-    --fg-muted: #a8a29e;
-    --border: #44403c;
-    --accent: #f59e0b;
-    --accent-fg: #1c1917;
-    --been: #f59e0b;
-    --want: #60a5fa;
-    --danger: #f87171;
-    --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
-  }
+  color-scheme: light;
 }
 
 * { box-sizing: border-box; }
@@ -48,7 +50,7 @@ body {
 button, input, textarea, select { font: inherit; color: inherit; }
 button { cursor: pointer; border: 0; background: none; padding: 0; }
 textarea { resize: vertical; }
-a { color: var(--accent); }
+a { color: var(--accent-ink); }
 
 .app { height: 100%; display: flex; flex-direction: column; }
 .app-body { flex: 1; min-height: 0; position: relative; z-index: 0; isolation: isolate; }
@@ -90,7 +92,7 @@ a { color: var(--accent); }
   flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px;
   padding: 6px 0; color: var(--fg-muted); font-size: 11px; font-weight: 600;
 }
-.bottomnav button.active { color: var(--accent); }
+.bottomnav button.active { color: var(--accent-ink); }
 
 .fab {
   position: absolute; right: 16px; bottom: 20px; z-index: 1000;
@@ -118,13 +120,13 @@ a { color: var(--accent); }
 .pin-inner span { transform: rotate(45deg); color: #fff; font-weight: 800; font-size: 13px; }
 .pin-been .pin-inner { background: var(--been); }
 .pin-want .pin-inner { background: var(--want); }
-.pin-me { width: 16px; height: 16px; border-radius: 50%; background: #2563eb; border: 3px solid #fff; box-shadow: 0 0 0 6px rgba(37,99,235,0.25); }
+.pin-me { width: 16px; height: 16px; border-radius: 50%; background: var(--soft); border: 3px solid var(--fg); box-shadow: 0 0 0 6px rgba(153,187,255,0.35); }
 .leaflet-popup-content-wrapper { background: var(--bg-elev); color: var(--fg); border-radius: 12px; }
 .leaflet-popup-tip { background: var(--bg-elev); }
 .leaflet-popup-content { margin: 10px 12px; }
 .popup-name { font-weight: 700; }
 .popup-meta { font-size: 13px; color: var(--fg-muted); }
-.popup-open { margin-top: 6px; color: var(--accent); font-weight: 600; font-size: 14px; }
+.popup-open { margin-top: 6px; color: var(--accent-ink); font-weight: 600; font-size: 14px; }
 
 /* Lists */
 .scroll { position: absolute; inset: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; padding: 12px 12px 100px; }
@@ -191,7 +193,7 @@ a { color: var(--accent); }
   width: 100%; padding: 10px 12px; border-radius: 10px; border: 1px solid var(--border);
   background: var(--bg-muted); outline: none;
 }
-.input:focus, .textarea:focus { border-color: var(--accent); }
+.input:focus, .textarea:focus { border-color: var(--accent-ink); }
 .textarea { min-height: 64px; }
 .row { display: flex; gap: 10px; align-items: center; }
 .row > * { flex: 1; }
@@ -242,8 +244,8 @@ a { color: var(--accent); }
 .detail-block p { margin: 0; white-space: pre-wrap; }
 .detail-actions { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 16px 0 8px; }
 .detail-actions button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px 4px; border-radius: 12px; background: var(--bg-muted); font-size: 12px; font-weight: 600; }
-.tip-order { border-left: 3px solid #16a34a; padding-left: 10px; }
-.tip-avoid { border-left: 3px solid var(--danger); padding-left: 10px; }
+.tip-order { border-left: 4px solid var(--accent); padding-left: 10px; }
+.tip-avoid { border-left: 4px solid var(--danger); padding-left: 10px; }
 
 /* Settings and misc */
 .settings-group { background: var(--bg-elev); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 14px; overflow: hidden; }
@@ -255,6 +257,6 @@ a { color: var(--accent); }
 .list-check { display: flex; align-items: center; gap: 12px; padding: 12px 4px; border-bottom: 1px solid var(--border); width: 100%; text-align: left; }
 .list-check .box { width: 22px; height: 22px; border-radius: 6px; border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; }
 .list-check .box.on { background: var(--accent); border-color: var(--accent); color: var(--accent-fg); }
-.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 16px auto; }
+.spinner { width: 20px; height: 20px; border: 2px solid var(--border); border-top-color: var(--accent-ink); border-radius: 50%; animation: spin 0.8s linear infinite; margin: 16px auto; }
 @keyframes spin { to { transform: rotate(360deg); } }
 .pre { white-space: pre-wrap; font-size: 14px; background: var(--bg-muted); padding: 12px; border-radius: 10px; max-height: 200px; overflow: auto; }

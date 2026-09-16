@@ -144,6 +144,8 @@
 <script>
 (function () {
   var PALETTES = [
+    { id:'chosen', name:'Yours (now live)', tag:'Deep wine and electric blue carry the two place states, since they are the only two dark enough for white text. Bright yellow is the action colour, with dark ink on it. Magenta and periwinkle appear in small doses.',
+      bg:'#FBF9F3', surface:'#FFFFFF', fg:'#1A1420', muted:'#6B6472', border:'#E8E2D8', been:'#802653', want:'#0055FF', accent:'#FFEE33', accentFg:'#1A1420' },
     { id:'current', name:'What you have now', tag:'Amber and blue. The pairing most map apps reach for.',
       bg:'#FAFAF9', surface:'#FFFFFF', fg:'#1C1917', muted:'#78716C', border:'#E7E5E4', been:'#D97706', want:'#2563EB', accent:'#D97706' },
     { id:'riso', name:'Riso Pop', tag:'Fluorescent pink and press green on warm paper. Borrowed from risograph printing, which is where the fluoro inks come from.',
@@ -175,14 +177,14 @@
     }).addTo(map);
   });
 
-  var current = PALETTES[1];
+  var current = PALETTES[0];
 
   function apply(p) {
     current = p;
     var r = document.documentElement.style;
     r.setProperty('--bg', p.bg); r.setProperty('--surface', p.surface); r.setProperty('--fg', p.fg);
     r.setProperty('--muted', p.muted); r.setProperty('--border', p.border);
-    r.setProperty('--been', p.been); r.setProperty('--want', p.want); r.setProperty('--accent', p.accent);
+    r.setProperty('--been', p.been); r.setProperty('--want', p.want); r.setProperty('--accent', p.accent); r.setProperty('--accent-fg', p.accentFg || '#FFFFFF');
     document.getElementById('p-name').textContent = p.name;
     document.getElementById('p-tag').textContent = p.tag;
     document.getElementById('s-name').textContent = p.name;
